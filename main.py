@@ -1302,6 +1302,10 @@ def handle_callbacks(call):
             bot.answer_callback_query(call.id, "⛔ Banned!", show_alert=True)
             return
 
+        if user_id != ADMIN_ID and bot_settings.get("maintenance_mode", False):
+            bot.answer_callback_query(call.id, "🔧 Bot is under maintenance. Please try again later.", show_alert=True)
+            return
+
         if call.data.startswith("copy_val|"):
             val = call.data.split("copy_val|", 1)[1]
             bot.answer_callback_query(call.id, text=f"✅ Copied!\n\n{val}", show_alert=True)
@@ -1564,6 +1568,12 @@ def handle_apk_upload(message):
         if not fname.lower().endswith(".apk"):
             return  # not an APK; ignore (admin project-file uploads now happen via the web panel)
         uid, chat_id = message.from_user.id, message.chat.id
+        if is_user_banned(uid) and uid != ADMIN_ID:
+            bot.reply_to(message, "⛔ Banned!")
+            return
+        if uid != ADMIN_ID and bot_settings.get("maintenance_mode", False):
+            bot.reply_to(message, "🔧 Bot is under maintenance. Please try again later.")
+            return
         ap = bot_settings.get("apk_protect", {})
         if not ap.get("enabled", False):
             bot.reply_to(message, "🛡️ APK Protect is currently unavailable.")
